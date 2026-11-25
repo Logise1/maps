@@ -1,12 +1,26 @@
 const SKIP_IDS = new Set([
   "svg3157", "namedview1", "title4", "defs3159", "clipPath7195", "rect7197",
   "style1", "layer1", "ocean", "country", "water_masses", "large_masses_of_water",
-  "metadata1", "xb", "uk", "gb", "gb-gbn", "gb-land-clip", "gb-eng", "gb-sct",
-  "gb-wls", "gb-nir", "gb-coastline", "dk_kingdom", "ru", "ru-main", "ru-kgd",
+  "metadata1", "xb", "gb-land-clip", "gb-coastline", "dk_kingdom",
   "transnistria", "nagorno-karabakh", "Southamerica_Blank",
 ]);
 
+const PREFER_ID = {
+  GB: ["gb-eng", "gb", "uk"],
+  RU: ["ru-main", "ru"],
+};
+
 const NAME_TO_ISO = {
+  uk: "GB",
+  gb: "GB",
+  "gb-gbn": "GB",
+  "gb-eng": "GB",
+  "gb-sct": "GB",
+  "gb-wls": "GB",
+  "gb-nir": "GB",
+  ru: "RU",
+  "ru-main": "RU",
+  "ru-kgd": "RU",
   Peru: "PE",
   FrenchGuiana: "GF",
   Bolivia: "BO",
@@ -147,7 +161,13 @@ export async function renderMap(svg, set, mapCfg) {
     el.dataset.id = iso;
     el.classList.add("land");
     if (playIds.has(iso)) el.classList.add("is-play");
-    if (!byIso[iso] || NAME_TO_ISO[el.id] && /Island/i.test(byIso[iso].id)) {
+    const cur = byIso[iso];
+    const pref = PREFER_ID[iso];
+    if (pref) {
+      const a = cur ? pref.indexOf(cur.id) : -1;
+      const b = pref.indexOf(el.id);
+      if (!cur || (b !== -1 && (a === -1 || b < a))) byIso[iso] = el;
+    } else if (!cur || (NAME_TO_ISO[el.id] && /Island/i.test(cur.id))) {
       byIso[iso] = el;
     }
   });
